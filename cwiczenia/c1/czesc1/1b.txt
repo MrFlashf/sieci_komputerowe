@@ -1,0 +1,5 @@
+telnet www.onet.pl 80
+GET /index.html HTTP/1.1
+host: www.onet.pl 
+
+//Działa tak samo przez nc

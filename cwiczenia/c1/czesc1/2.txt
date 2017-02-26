@@ -1,0 +1,4 @@
+Na komputerze A:
+ - nc -l <numer_portu>
+Na komputerze B: 
+ - nc <numer_IP_komputera_A> <numer_portu>
