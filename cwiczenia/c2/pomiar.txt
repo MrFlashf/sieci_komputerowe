@@ -1,0 +1,2 @@
+Przykład 2: 0.000088s
+Zad podpuntk chyba b: 0.000031s
