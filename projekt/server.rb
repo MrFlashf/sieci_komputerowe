@@ -1,16 +1,17 @@
 require "socket"
+require 'fileutils'
 require_relative "ClientClass"
+
 class Server
+	SIZE = 1014*1024*10
 	def initialize
 		# setConnectionData
-		@server      = TCPServer.open("localhost", 8000)
+		@server      = TCPServer.open("127.0.0.1", 8000)
 		@connections = Hash.new
 		@clients	 = Hash.new
 		@rooms		 = Hash.new
 		setRooms
-		# @connections[:rooms]   = @rooms
-		# @connections[:server]  = @server
-		# @connections[:clients] = @clients
+		@fileCounter = 0
 		run
 	end
 	attr_reader :rooms  
@@ -57,15 +58,59 @@ class Server
 	def listen_user_messages(username, client)
 		loop {
 			msg = client.client.gets.chomp
-			@clients.each do |other_nick, other_client|
-				if other_client.room == client.room
-					unless other_nick == username
-						other_client.client.puts "#{username.to_s}: #{msg}"
-					end
-				end				
-			end
+
+			# if checkIfFile(msg)
+			# 	File.open('./serverFiles/plik.txt', 'w') do |file|
+			# 		while filepart = client.client.gets
+			# 			file.puts(filepart)
+			# 		end
+			# 		file.close
+			# 	end
+					
+			# 	# File.open("./serverFiles/file#{@fileCounter}_#{checkFilePath(msg)}",'w') do |file|
+			# 	# 	client.client.flush
+			# 	# 	while chunki = client.client.read(SIZE)
+			# 	# 		client.client.flush
+			# 	# 		puts chunki
+			# 	# 		file.write(chunki)						
+			# 	# 	end
+			# 	# 	file.close()
+			# 	# end
+				
+			# 	# @clients.each do |other_nick, other_client|
+			# 	# 	if other_client.room == client.room
+			# 	# 		unless other_nick == username
+			# 	# 			puts "Wysyłam pli9k do #{other_nick}"
+			# 	# 			other_client.client.puts "qqFILE: {checkFilePath(msg)}"
+			# 	# 			File.open("./serverFiles/file#{@fileCounter}_#{checkFilePath(msg)}", 'rb') do |file|
+			# 	# 				while chunk = file.read(SIZE)
+			# 	# 					@other_client.client.write(chunk)
+			# 	# 				end
+			# 	# 				file.close()
+			# 	# 			end
+			# 	# 		end
+			# 	# 	end
+			# 	# end		
+			# else
+				@clients.each do |other_nick, other_client|
+					if other_client.room == client.room
+						unless other_nick == username
+							other_client.client.puts "#{username.to_s}: #{msg}"
+						end
+					end				
+				end
+			# end
 		}
 	end
+
+	def checkIfFile(msg)
+		return (/qqFILE:/ =~ msg.split[0]) == 0
+	end
+
+	def checkFilePath(msg)"./#{@nick}_files"
+		return msg.split.slice(1,1).join
+	end
+
 end
 
 Server.new
