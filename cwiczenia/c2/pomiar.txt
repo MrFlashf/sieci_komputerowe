@@ -1,2 +1,5 @@
-Przykład 2: 0.000088s
-Zad podpuntk chyba b: 0.000031s
+Czas sprawdzany na wirtualnym pulpicie (LTS):
+ 1. UDP: 0.000049s
+ 2. TCP: 0.000172
+ 3. Przykład z ćwiczeń: 0.000262s
+
