@@ -8,8 +8,8 @@ class Server
 		# setConnectionData
 		@server      = TCPServer.open("127.0.0.1", 8000)
 		@connections = Hash.new
-		@clients	 = Hash.new
-		@rooms		 = Hash.new
+		@clients		 = Hash.new
+		@rooms		 	 = Hash.new
 		setRooms
 		@fileCounter = 0
 		run
@@ -57,41 +57,38 @@ class Server
 
 	def listen_user_messages(username, client)
 		loop {
-			msg = client.client.gets.chomp
+			msg = client.client.gets
 
-			# if checkIfFile(msg)
-			# 	File.open('./serverFiles/plik.txt', 'w') do |file|
-			# 		while filepart = client.client.gets
-			# 			file.puts(filepart)
-			# 		end
-			# 		file.close
-			# 	end
-					
-			# 	# File.open("./serverFiles/file#{@fileCounter}_#{checkFilePath(msg)}",'w') do |file|
-			# 	# 	client.client.flush
-			# 	# 	while chunki = client.client.read(SIZE)
-			# 	# 		client.client.flush
-			# 	# 		puts chunki
-			# 	# 		file.write(chunki)						
-			# 	# 	end
-			# 	# 	file.close()
-			# 	# end
-				
-			# 	# @clients.each do |other_nick, other_client|
-			# 	# 	if other_client.room == client.room
-			# 	# 		unless other_nick == username
-			# 	# 			puts "Wysyłam pli9k do #{other_nick}"
-			# 	# 			other_client.client.puts "qqFILE: {checkFilePath(msg)}"
-			# 	# 			File.open("./serverFiles/file#{@fileCounter}_#{checkFilePath(msg)}", 'rb') do |file|
-			# 	# 				while chunk = file.read(SIZE)
-			# 	# 					@other_client.client.write(chunk)
-			# 	# 				end
-			# 	# 				file.close()
-			# 	# 			end
-			# 	# 		end
-			# 	# 	end
-			# 	# end		
-			# else
+			if check_if_file(msg)
+				file_name = check_file_path(msg, false)
+				path = check_file_path(msg, true)
+
+				file = File.open(path, 'w')
+				while (m = client.client.gets)
+					if m.chomp != 'end'
+						file.write m
+					else
+						file.close
+						break
+					end
+				end
+				#send file to clients in room
+
+				@clients.each do |other_nick, other_client|
+					if other_client.room == client.room
+						unless other_nick == username
+							other_client.client.puts "FILE: #{file_name}"
+							file = File.open(path, 'rb')
+							while chunk = file.read(SIZE)
+								other_client.client.puts(chunk)
+							end
+							file.close
+							other_client.client.puts "end"
+						end
+					end
+				end
+
+			else
 				@clients.each do |other_nick, other_client|
 					if other_client.room == client.room
 						unless other_nick == username
@@ -99,16 +96,20 @@ class Server
 						end
 					end				
 				end
-			# end
+			end
 		}
 	end
 
-	def checkIfFile(msg)
+	def check_if_file(msg)
 		return (/qqFILE:/ =~ msg.split[0]) == 0
 	end
 
-	def checkFilePath(msg)"./#{@nick}_files"
-		return msg.split.slice(1,1).join
+	def check_file_path(msg, flag)
+		if flag
+			'./server-files/' + msg.split.slice(1,1).join
+		else
+			msg.split.slice(1,1).join
+		end
 	end
 
 end

@@ -18,8 +18,8 @@ class Client
 
 	def connect
 		puts "Podaj swoj nick"
-		nick = gets.chomp
-		@server.puts(nick)
+		@nick = gets.chomp
+		@server.puts(@nick)
 	end
 
 
@@ -27,17 +27,25 @@ class Client
 		@response = Thread.new do 
 			loop {
 				msg = @server.gets.chomp
-				# if checkIfFile(msg)
-				# 	puts "Wysyła mi filea"
-				# 	unless File.directory?("./#{@nick}_files")
-				# 		fileutils.mkdir_p("./#{@nick}_files")
-				# 	end
-				# 	File.open("./#{@nick}_files/file#{@fileCounter}_#{checkFilePath(msg)}",'w')
-				# 	while chunk = client.client.read(SIZE)
-				# 		file.write(chunk)						
-				# 	end
-				# end
-				puts "#{msg}"
+				if check_if_file(msg)
+					path = check_file_path(msg)
+					#tworzymy katalog użytkownika
+					unless File.directory?("./#{@nick}_files")
+						FileUtils::mkdir_p "./#{@nick}_files"
+					end
+
+					file = File.open("./#{@nick}_files/#{path}", 'w')
+					while (m = @server.gets)
+						if m.chomp != 'end'
+							file.write m
+						else
+							file.close
+							break
+						end
+					end
+				else
+					puts "#{msg}"
+				end
 			}
 		end
 	end
@@ -45,38 +53,34 @@ class Client
 	def send
 		@request = Thread.new do
 			loop {
+				puts "Podaj wiadomość: "
 				msg = $stdin.gets.chomp
-				# if checkIfFile(msg)
-				# 	@server.puts "qqFILE: #{checkFilePath(msg)}"
-				# 	puts readFile
-				# 	@server.puts(readFile)
-				# else
+				if check_if_file(msg)
+					path = check_file_path(msg)
+					@server.puts "qqFILE: #{path}"
+					file = File.open(path, 'rb')
+					while chunk = file.read(SIZE)
+						@server.puts(chunk)
+					end
+					file.close
+					@server.puts "end"
+
+				else
 					@server.puts(msg)
-				# end
+				end
 			}
 		end
 	end
 
-	# def readFile
-	# 	ret = []
-	# 	File.open("1.txt", "rb") do |file|
-	# 		while chunk = file.read(SIZE)
-	# 			ret.push(chunk)
-	# 		end
-	# 		file.close
-	# 	end
-	# 	return ret
-	# end
+	def check_if_file(msg)
+		(/FILE:/ =~ msg.split[0]) == 0
+	end
 
-	# def checkIfFile(msg)
-	# 	return (/FILE:/ =~ msg.split[0]) == 0
-	# end
-
-	# def checkFilePath(msg)
-	# 	return msg.split.slice(1,1).join
-	# end
+	def check_file_path(msg)
+		msg.split.slice(1,1).join
+	end
 
 end
 
-server = TCPSocket.open("localhost", 8000)
+server = TCPSocket.open('127.0.0.1', 8000)
 Client.new(server)
